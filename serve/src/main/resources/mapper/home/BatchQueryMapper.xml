@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 按标签查询 -->
+<mapper namespace="org.elves.home.mapper.BatchQueryMapper">
+    <select id="selectModelByTag" resultType="vo.ModelBasicInfoVo">
+        SELECT
+            m.model_id,
+            m.name,
+            m.creator_id,
+            m.cover_url,
+            m.type,
+            m.download_count,
+            m.created_at,
+            m.like_count,
+            u.username,
+            up.avatar_url
+
+        FROM models m
+        LEFT OUTER JOIN `ai-magic`.users u on u.user_id = m.creator_id
+        LEFT JOIN `ai-magic`.user_profiles up on u.user_id = up.user_id
+        LEFT JOIN `ai-magic`.model_tags_relation mtr on m.model_id = mtr.model_id
+        LEFT JOIN `ai-magic`.model_tags mt on mt.tag_id = mtr.tag_id
+
+        <!-- 查找 -->
+        <where>
+            <!-- 排序策略按排序策略查找数据 -->
+            <if test="cursor != null">
+                <choose>
+                    <when test="sortStrategy == 'latest'"><![CDATA[
+                        m.created_at < #{cursor.createdAt} AND m.model_id < #{cursor.modelId}
+                        ]]>
+                    </when>
+                    <when test="sortStrategy == 'hottest'"><![CDATA[
+                        m.like_count < #{cursor.likeCount} AND m.model_id < , #{cursor.modelId}
+                        ]]>
+                    </when>
+                    <otherwise><![CDATA[
+                        m.created_at < #{cursor.createdAt}
+                        ]]>
+                    </otherwise>
+                </choose>
+            </if>
+
+            <!-- 按标签筛选数据 -->
+            <if test="tag != null and tag != ''">
+                AND (
+                    mt.name = #{keyword}
+                )
+            </if>
+        </where>
+
+        <!-- 排序 -->
+        ORDER BY
+        <choose>
+            <when test="sortStrategy == 'latest'">
+                m.created_at ASC, m.model_id ASC
+            </when>
+            <when test="sortStrategy == 'hottest'">
+                m.like_count DESC, m.model_id ASC
+            </when>
+            <otherwise>
+                m.model_id ASC
+            </otherwise>
+        </choose>
+
+        LIMIT #{size}
+    </select>
+    
+    <select id="selectModelByName" resultType="vo.ModelBasicInfoVo">
+        SELECT
+            m.model_id,
+            m.name,
+            m.creator_id,
+            m.cover_url,
+            m.type,
+            m.download_count,
+            m.like_count,
+            m.created_at,
+            u.username,
+            up.avatar_url
+
+        FROM models m
+        LEFT OUTER JOIN `ai-magic`.users u on u.user_id = m.creator_id
+        LEFT JOIN `ai-magic`.user_profiles up on u.user_id = up.user_id
+
+        <where>
+            <!-- 排序策略按排序策略查找数据 -->
+            <if test="cursor != null">
+                <choose>
+                    <when test="sortStrategy == 'latest'"><![CDATA[
+                        (m.created_at, m.model_id) < (#{cursor.createdAt}, #{cursor.modelId})
+                        ]]>
+                    </when>
+                    <when test="sortStrategy == 'hottest'"><![CDATA[
+                        (m.like_count, m.model_id) < (#{cursor.likeCount}, #{cursor.modelId})
+                        ]]>
+                    </when>
+                    <otherwise><![CDATA[
+                        m.created_at < #{cursor.createdAt}
+                        ]]>
+                    </otherwise>
+                </choose>
+            </if>
+            <!-- 按模糊名字筛选数据 -->
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    m.name LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+        </where>
+        <!-- 排序 -->
+        ORDER BY
+        <choose>
+            <when test="sortStrategy == 'latest'">
+                m.created_at ASC, m.model_id ASC
+            </when>
+            <when test="sortStrategy == 'hottest'">
+                m.like_count DESC, m.model_id ASC
+            </when>
+            <otherwise>
+                m.model_id ASC
+            </otherwise>
+        </choose>
+
+        LIMIT #{size}
+    </select>
+
+    <select id="selectModelByUserId" resultType="vo.ModelBasicInfoVo">
+        SELECT
+        m.model_id,
+        m.name,
+        m.creator_id,
+        m.cover_url,
+        m.type,
+        m.download_count,
+        m.like_count,
+        m.created_at,
+        u.username,
+        up.avatar_url
+
+        FROM models m
+        LEFT OUTER JOIN `ai-magic`.users u on u.user_id = m.creator_id
+        LEFT JOIN `ai-magic`.user_profiles up on u.user_id = up.user_id
+
+        <where>
+            <!-- 排序策略按排序策略查找数据 -->
+            <if test="cursor != null">
+                <choose>
+                    <when test="sortStrategy == 'latest'"><![CDATA[
+                        (m.created_at, m.model_id) < (#{cursor.createdAt}, #{cursor.modelId})
+                        ]]>
+                    </when>
+                    <when test="sortStrategy == 'hottest'"><![CDATA[
+                        (m.like_count, m.model_id) < (#{cursor.likeCount}, #{cursor.modelId})
+                        ]]>
+                    </when>
+                    <otherwise><![CDATA[
+                        m.created_at < #{cursor.createdAt}
+                        ]]>
+                    </otherwise>
+                </choose>
+            </if>
+            <!-- 筛选用户模型 -->
+            <if test="userId != null and userId != ''">
+                AND (
+                    m.creator_id = #{userId}
+                )
+            </if>
+        </where>
+
+        <!-- 排序 -->
+        ORDER BY
+        <choose>
+            <when test="sortStrategy == 'latest'">
+                m.created_at ASC, m.model_id ASC
+            </when>
+            <when test="sortStrategy == 'hottest'">
+                m.like_count DESC, m.model_id ASC
+            </when>
+            <otherwise>
+                m.model_id ASC
+            </otherwise>
+        </choose>
+
+        LIMIT #{size}
+    </select>
+</mapper>

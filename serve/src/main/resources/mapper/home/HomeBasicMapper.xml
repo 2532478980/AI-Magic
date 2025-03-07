@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.elves.home.mapper.HomeBasicMapper">
+
+    <select id="SelectModelInfoById" resultType="vo.ModelInfoVo">
+        SELECT
+            m.*,
+            u.username,
+            up.cover_url
+        FROM models m
+        LEFT JOIN `ai-magic`.users u on u.user_id = m.creator_id
+        LEFT JOIN `ai-magic`.user_profiles up on u.user_id = up.user_id
+        WHERE m.model_id = #{modelId}
+    </select>
+
+    <select id="SelectUserBasicInfoById" resultType="vo.UserBasicInfoVo">
+        SELECT
+            u.username,
+            up.avatar_url,
+            up.cover_url,
+            up.intro
+        FROM users u
+        LEFT JOIN `ai-magic`.user_profiles up on u.user_id = up.user_id
+    </select>
+
+</mapper>
